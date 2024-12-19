@@ -9,6 +9,7 @@ import argparse
 from dotenv import load_dotenv
 from pathvalidate import sanitize_filename
 from time import sleep
+import csv
 
 # when rate-limited, add this to the wait time
 ADDITIONAL_SLEEP_TIME = 2
@@ -441,6 +442,30 @@ def save_files(file_dir):
     print("Downloaded %i files in %i seconds" % (total, seconds))
 
 
+def parse_to_csv(messages, users):
+    rows = []
+    headers = ['timestamp', 'user', 'text', 'thread_ts', 'reply_count']
+    
+    for msg in messages:
+        row = {
+            'timestamp': msg['ts'],
+            'user': get_user_name(msg['user'], users) if 'user' in msg else '',
+            'text': msg['text'] if 'text' in msg else '',
+            'thread_ts': msg.get('thread_ts', ''),
+            'reply_count': msg.get('reply_count', 0)
+        }
+        rows.append(row)
+        
+    return headers, rows
+
+def save_as_csv(data, filename):
+    headers, rows = parse_to_csv(data)
+    with open(f"{filename}.csv", 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -481,6 +506,11 @@ if __name__ == "__main__":
         "--files",
         action="store_true",
         help="Download all files",
+    )
+    parser.add_argument(
+        "--csv",
+        action="store_true", 
+        help="Output in CSV format instead of text/JSON"
     )
 
     a = parser.parse_args()
@@ -530,6 +560,9 @@ if __name__ == "__main__":
     def save_channel(channel_hist, channel_id, channel_list, users):
         if a.json:
             data_ch = channel_hist
+        elif a.csv:
+            save_as_csv(channel_hist, f"channel_{channel_id}")
+            return
         else:
             data_ch = parse_channel_history(channel_hist, users)
             ch_name, ch_type = name_from_ch_id(channel_id, channel_list)

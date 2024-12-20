@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 from pathvalidate import sanitize_filename
 from time import sleep
 import csv
+import base64
+import mimetypes
+from io import BytesIO
 
 # when rate-limited, add this to the wait time
 ADDITIONAL_SLEEP_TIME = 2
@@ -442,17 +445,62 @@ def save_files(file_dir):
     print("Downloaded %i files in %i seconds" % (total, seconds))
 
 
+def get_file_content(file_url):
+    """Download file and return base64 encoded content"""
+    try:
+        response = requests.get(file_url, headers=HEADERS)
+        if response.status_code == 200:
+            return base64.b64encode(response.content).decode('utf-8')
+    except Exception as e:
+        print(f"Failed to download file: {e}")
+    return None
+
 def parse_to_csv(messages, users):
     rows = []
-    headers = ['timestamp', 'user', 'text', 'thread_ts', 'reply_count']
+    headers = ['timestamp', 'user', 'text', 'thread_ts', 'reply_count', 'media_data']
     
     for msg in messages:
+        media_data = []
+        
+        # Handle files in message
+        if 'files' in msg:
+            for file in msg['files']:
+                try:
+                    url_private = file.get('url_private', '')
+                    if url_private:
+                        response = requests.get(url_private, headers=HEADERS)
+                        if response.status_code == 200:
+                            file_type = file.get('filetype', '').lower()
+                            file_name = file.get('name', '')
+                            # Convert file to base64
+                            b64_content = base64.b64encode(response.content).decode('utf-8')
+                            # Create data URI format
+                            mime_type = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
+                            data_uri = f"data:{mime_type};base64,{b64_content}"
+                            media_data.append(data_uri)
+                except Exception as e:
+                    print(f"Failed to download file: {e}")
+        
+        # Handle other attachments
+        if 'attachments' in msg:
+            for attachment in msg['attachments']:
+                try:
+                    if 'image_url' in attachment:
+                        response = requests.get(attachment['image_url'], headers=HEADERS)
+                        if response.status_code == 200:
+                            b64_content = base64.b64encode(response.content).decode('utf-8')
+                            data_uri = f"data:image/jpeg;base64,{b64_content}"
+                            media_data.append(data_uri)
+                except Exception as e:
+                    print(f"Failed to download attachment: {e}")
+        
         row = {
             'timestamp': msg['ts'],
             'user': get_user_name(msg['user'], users) if 'user' in msg else '',
             'text': msg['text'] if 'text' in msg else '',
             'thread_ts': msg.get('thread_ts', ''),
-            'reply_count': msg.get('reply_count', 0)
+            'reply_count': msg.get('reply_count', 0),
+            'media_data': '||'.join(media_data) if media_data else ''
         }
         rows.append(row)
         

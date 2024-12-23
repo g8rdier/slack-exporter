@@ -5,16 +5,16 @@ from datetime import datetime
 
 # User ID mapping
 USER_MAP = {
-    'U079JGC18B0': 'l.faber@purpose.hr',
-    'U07KM56H4N9': 's.biswas@purpose.hr',
-    'U07FNEPPJGN': 'k.mefteh@purpose.hr',
-    'U07Q83UQBLK': 'i.cherri@purpose.hr',
-    'U07A6SKM9PT': 'g.tatters@purpose.hr',
-    'U079BG3HTE3': 'g.kobilarov@purpose.hr',
-    'U084S6LTJ79': 'd.kreiger@purpose.hr',
-    'U078P177DJA': 'm.wasay@purpose.hr',
-    'U079A30046P': 'm.chowaniec@purpose.hr',
-    'U07AA0JHY7K': 'w.feriz@purpose.hr'
+    'U07JGC18B0': 'lukas@purpose.hr',
+    'U07K56H4N9': 'shatabdi@purpose.hr',
+    'U07FEPPJGN': 'kaouther@purpose.hr',
+    'U0Q83UQBLK': 'ismail@purpose.hr',
+    'U07A6KM9PT': 'gaby@purpose.hr',
+    'U079B3HTE3': 'gregor@purpose.hr',
+    'U084SLTJ79': 'dan@purpose.hr',
+    'U078P177JA': 'mohib@purpose.hr',
+    'U079A3046P': 'mieszko@purpose.hr',
+    'U07AA0HY7K': 'wael@purpose.hr'
 
 
 }

@@ -6,13 +6,17 @@ A similar service is provided by Slack for workspace admins at [https://my.slack
 
 ## Enhancements in This Fork
 
-This fork extends the original slack-exporter with additional export capabilities:
+This fork extends the original slack-exporter with comprehensive CSV export capabilities:
 
-- **CSV Export**: Export Slack conversations and data in CSV format for improved data portability and analysis
-- **Media File Integration**: Enhanced handling of media files during the export process
-- **Enhanced Documentation**: Improved documentation for the CSV converter functionality
+- **Direct CSV Export**: Use `--csv` flag to export directly to CSV format from the main exporter
+- **Standalone CSV Converter**: Post-process JSON exports with `converter_to_csv.py` for advanced customization
+- **Media File Embedding**: Automatically download and embed media files as base64 data URIs in CSV exports
+- **User ID Mapping**: Replace Slack user IDs with email addresses for improved readability
+- **User Mention Processing**: Convert `` mentions in message text to email addresses
+- **Channel Name Mapping**: Transform JSON filenames into human-readable channel names
+- **Message Filtering**: Automatically exclude bot messages (USLACKBOT) from exports
 
-These enhancements make it easier to analyze Slack data, create backups, or migrate conversations to other platforms.
+These enhancements provide flexible CSV export options for data analysis, backup, and migration purposes.
 
 ## Authentication with Slack
 
@@ -45,11 +49,67 @@ There are two ways to use `slack-exporter` (detailed below). Both require a Slac
 2. If you cloned this repo, make sure that dependencies are installed by running `pip install -r requirements.txt` in the repo root directory.
 3. Run `python exporter.py --help` to view the available export options. You can test that access to Slack is working by listing available conversations: `python exporter.py --lc`.
 
-
 ### CSV Export
 
-This fork includes additional CSV export functionality. Run `python exporter.py --help` to see the available CSV export options alongside the original export formats.
+This fork provides two methods for CSV export:
 
+#### Method 1: Direct CSV Export
+Export directly to CSV format using the main exporter:
+
+```
+python exporter.py --csv [other options]
+```
+
+**CSV Structure:**
+- `timestamp`: Message timestamp
+- `user`: User name (resolved from user ID)
+- `text`: Message content
+- `thread_ts`: Thread timestamp (if message is part of a thread)
+- `reply_count`: Number of replies (for thread parent messages)
+- `media_data`: Base64-encoded media files as data URIs (separated by `||`)
+
+#### Method 2: Standalone CSV Converter
+First export to JSON, then convert using the dedicated converter:
+
+1. Export to JSON: `python exporter.py --json [other options]`
+2. Run the CSV converter: `python converter_to_csv.py`
+
+**Converter Features:**
+- **User ID Mapping**: Automatically replaces Slack user IDs with configured email addresses
+- **Channel Name Mapping**: Converts JSON filenames to readable channel names
+- **Mention Processing**: Replaces `` mentions with email addresses
+- **Customizable Mappings**: Edit `USER_MAP` and `channel_mapping` dictionaries for your workspace
+
+**CSV Output Format:**
+- `timestamp`: Message timestamp
+- `channel`: Human-readable channel name
+- `user`: User email address
+- `text`: Message content with processed mentions
+
+#### Media File Handling
+When using the `--csv` flag, the exporter automatically:
+- Downloads all attached files and images
+- Converts them to base64 data URIs
+- Embeds them in the `media_data` column
+- Supports various file types with proper MIME type detection
+
+#### CSV Export Examples
+
+**Direct export with CSV format:**
+```
+python exporter.py --csv --channel general
+```
+
+**Export specific channels to CSV:**
+```
+python exporter.py --csv --channel-list "general,random,tech"
+```
+
+**Post-process existing JSON exports:**
+```
+python converter_to_csv.py
+```
+(Note: Update the `json_dir` path in the script to match your export directory)
 
 ### As a Slack bot
 
@@ -57,7 +117,7 @@ This fork includes additional CSV export functionality. Run `python exporter.py 
 
 ```text
 SLACK_USER_TOKEN = xoxp-xxxxxxxxxxxxx...
-``` 
+```
 
 Save this file and run the Flask application in `bot.py` such that the application is exposed to the Internet. This can be done via a web server (e.g., Heroku), as well as via the ngrok service, which assigns your `localhost` server a public URL.
 
@@ -76,10 +136,10 @@ To use the ngrok method:
 
     To do this, uncomment the `slash-commands` section in `slack.yaml` and replace `YOUR_HOST_URL_HERE` with something like `https://xxxxxxxxxxxx.ngrok.io` (if using ngrok). Then navigate back to `OAuth & Permissions` and click `(Re)install to Workspace` to add these slash commands to the workspace (ensure the OAuth token in your `.env` file is still correct).
 
-## Author
+## Contributors
 
-- [Seb Seager](https://github.com/sebseager) - Original author
-- [g8rdier](https://github.com/g8rdier) - CSV export functionality and media file support
+- **Original Author**: [Seb Seager](https://github.com/sebseager)
+- **Fork Enhancements**: [g8rdier](https://github.com/g8rdier) - CSV export functionality and media file support
 
 ## License
 

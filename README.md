@@ -139,7 +139,7 @@ To use the ngrok method:
 ## Contributors
 
 - **Original Author**: [Seb Seager](https://github.com/sebseager)
-- **Fork Enhancements**: [g8rdier](https://github.com/g8rdier) - CSV export functionality and media file support
+- **Fork Enhancements**: [Gregor Kobilarov](https://github.com/g8rdier) - CSV export functionality and media file support
 
 ## License
 
